@@ -5,28 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My 3D Portfolio</title>
     <style>
+        /* 전체 배경은 어두운 색으로 유지 */
         body { margin: 0; background-color: #0a0a0a; color: white; font-family: sans-serif; overflow: hidden; }
 
         .main-container {
             position: relative;
             width: 100vw;
             height: 100vh;
+            /* 뷰어를 화면 중앙에 배치하기 위한 설정 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
+        /* [수정됨] 뷰어 크기를 줄이고 중앙에 액자처럼 배치 */
         model-viewer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            position: relative; /* flex 중앙 정렬을 위해 relative로 변경 */
+            width: 90vw;  /* 너비를 화면의 90%로 축소 */
+            height: 85vh; /* 높이를 화면의 85%로 축소 */
             z-index: 1;
-            background-color: transparent;
+            
+            /* [옵션] 액자 느낌을 더 주는 스타일 (원치 않으면 지워도 됨) */
+            border-radius: 24px; /* 모서리 둥글게 */
+            box-shadow: 0 10px 40px rgba(0,0,0, 0.8); /* 진한 그림자 추가 */
+            
+            background-color: transparent; 
             --poster-color: transparent;
         }
 
+        /* 버튼 컨테이너 위치 */
         .links-container {
             position: absolute;
-            bottom: 10%;
+            bottom: 5%; /* 뷰어 밑으로 살짝 내림 */
             left: 50%;
             transform: translateX(-50%);
             display: flex;
@@ -35,28 +45,19 @@
         }
 
         .link-btn {
-            text-decoration: none;
-            color: white;
-            border: 2px solid white;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: bold;
-            background-color: rgba(0, 0, 0, 0.5);
-            transition: all 0.3s ease;
-            white-space: nowrap;
+            text-decoration: none; color: white; border: 2px solid white;
+            padding: 12px 24px; font-size: 16px; font-weight: bold;
+            background-color: rgba(0, 0, 0, 0.5); transition: all 0.3s ease; white-space: nowrap;
         }
+        .link-btn:hover { background-color: white; color: black; }
 
-        .link-btn:hover {
-            background-color: white;
-            color: black;
-        }
-
+        /* 모바일 대응 */
         @media (max-width: 768px) {
-            .links-container {
-                width: 90%;
-                justify-content: center;
-                flex-wrap: wrap;
-            }
+            model-viewer { 
+                width: 95vw; /* 모바일에선 조금 더 넓게 */
+                height: 80vh; 
+            } 
+            .links-container { width: 90%; justify-content: center; flex-wrap: wrap; bottom: 3%; }
         }
     </style>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
@@ -65,22 +66,22 @@
 
     <div class="main-container">
 
-        <model-viewer
-            src="assets/humanoid%20robot%203d%20model.glb"
-            alt="휴머노이드 로봇"
+        <model-viewer 
+            src="assets/humanoid%20robot%203d%20model.glb" 
+            alt="휴머노이드 로봇" 
 
             skybox-image="assets/skybox.png"
             environment-image="assets/skybox.png"
 
-            auto-rotate
-            camera-controls
+            auto-rotate 
+            camera-controls 
             shadow-intensity="1.5"
             exposure="1"
 
-            field-of-view="75deg"
-            min-field-of-view="30deg"
-            max-field-of-view="100deg"
-
+            /* 여기 숫자를 키웠습니다! (더 넓게 보고 싶으면 이 숫자를 더 키우세요) */
+            field-of-view="110deg" 
+            min-field-of-view="60deg"
+            max-field-of-view="140deg"
         >
         </model-viewer>
 
