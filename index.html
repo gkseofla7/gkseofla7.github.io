@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Portfolio</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        #vanta-canvas { width: 100vw; height: 100vh; }
+        h1 { position: absolute; color: white; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.net.min.js"></script>
+</head>
+<body>
+    <div id="vanta-canvas"></div>
+    <h1>안녕하세요! 제 포트폴리오입니다.</h1>
+
+    <script>
+        VANTA.NET({
+            el: "#vanta-canvas",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            color: 0x3f9eff,       /* 색상 변경 가능 */
+            backgroundColor: 0x0   /* 배경색 변경 가능 */
+        })
+    </script>
+</body>
+</html>
