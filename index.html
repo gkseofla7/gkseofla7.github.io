@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My 3D Portfolio</title>
     <style>
-        /* 배경: 어두운 톤 */
+        /* 배경색: 이미지가 로딩되기 전이나 빈 공간에 보일 색 */
         body { margin: 0; background-color: #0a0a0a; color: white; font-family: sans-serif; }
 
-        /* 메인 컨테이너 */
         .main-container {
             position: relative;
             width: 100vw;
@@ -19,7 +18,6 @@
             flex-direction: column;
         }
 
-        /* 3D 모델 뷰어 크기 및 스타일 */
         model-viewer {
             width: 80vw;
             height: 60vh;
@@ -27,7 +25,6 @@
             --poster-color: transparent;
         }
 
-        /* 버튼 컨테이너 */
         .links-container {
             position: absolute;
             bottom: 15%;
@@ -36,7 +33,6 @@
             z-index: 10;
         }
 
-        /* 링크 버튼 스타일 */
         .link-btn {
             text-decoration: none;
             color: white;
@@ -61,16 +57,19 @@
         <model-viewer 
             src="assets/humanoid%20robot%203d%20model.glb" 
             alt="휴머노이드 로봇" 
+            
+            skybox-image="assets/skybox.jpg"
+            environment-image="assets/skybox.jpg"
+            
             auto-rotate 
             camera-controls 
-            shadow-intensity="1">
+            shadow-intensity="1.5"
+            exposure="1">
         </model-viewer>
 
         <div class="links-container">
             <a href="https://github.com/gkseofla7" class="link-btn" target="_blank">Github</a>
-            
             <a href="https://www.linkedin.com/in/%EB%8C%80%EB%A6%BC-%ED%95%9C-299aab293/" class="link-btn" target="_blank">LinkedIn</a>
-            
             <a href="#" class="link-btn" target="_blank">Itch</a>
             <a href="#" class="link-btn" target="_blank">Posts</a>
         </div>
