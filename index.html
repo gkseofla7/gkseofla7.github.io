@@ -1,33 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>My Portfolio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My 3D Portfolio</title>
     <style>
-        body { margin: 0; overflow: hidden; }
-        #vanta-canvas { width: 100vw; height: 100vh; }
-        h1 { position: absolute; color: white; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; }
+        body { margin: 0; background-color: #1a1a1a; }
+        model-viewer { width: 100vw; height: 100vh; }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.net.min.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 </head>
 <body>
-    <div id="vanta-canvas"></div>
-    <h1>사랑해요 김채니.</h1>
 
-    <script>
-        VANTA.NET({
-            el: "#vanta-canvas",
-            mouseControls: true,
-            touchControls: true,
-            gyroControls: false,
-            minHeight: 200.00,
-            minWidth: 200.00,
-            scale: 1.00,
-            scaleMobile: 1.00,
-            color: 0x3f9eff,       /* 색상 변경 가능 */
-            backgroundColor: 0x0   /* 배경색 변경 가능 */
-        })
-    </script>
+    <model-viewer 
+        src="assets/humanoid%20robot%203d%20model.glb" 
+        alt="휴머노이드 로봇" 
+        auto-rotate 
+        camera-controls 
+        shadow-intensity="1">
+    </model-viewer>
+
 </body>
 </html>
