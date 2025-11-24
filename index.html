@@ -5,89 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My 3D Portfolio</title>
     <style>
-        /* 배경 및 기본 설정 */
-        body { margin: 0; background-color: #0a0a0a; color: white; font-family: sans-serif; overflow: hidden; }
+        /* 배경: 어두운 톤 */
+        body { margin: 0; background-color: #0a0a0a; color: white; font-family: sans-serif; }
 
-        /* 화면 중앙 정렬 */
+        /* 메인 컨테이너 */
         .main-container {
             position: relative;
             width: 100vw;
-            height: 100dvh;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
         }
 
-        /* 모델 래퍼 */
-        .models-wrapper {
-            position: relative;
-            width: 100%;
-            height: 70vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-        }
-
-        /* 1. 로봇 (중앙) */
-        #robot-model {
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-
-        /* 2. 찐빵 (우측 구석으로 이동) */
-        #dumpling-model {
-            position: absolute;
-            
-            /* [수정됨] 20% -> 5% (오른쪽 벽에 바짝 붙임) */
-            right: 5%;   
-            bottom: 0%;   
-            
-            width: 180px; 
-            height: 180px; 
-            
-            z-index: 2;
+        /* 3D 모델 뷰어 크기 및 스타일 */
+        model-viewer {
+            width: 80vw;
+            height: 60vh;
+            background-color: transparent; 
             --poster-color: transparent;
-            pointer-events: none; 
         }
 
         /* 버튼 컨테이너 */
         .links-container {
             position: absolute;
-            bottom: 10%;
+            bottom: 15%;
             display: flex;
-            gap: 15px;
+            gap: 20px;
             z-index: 10;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: 100%;
         }
 
+        /* 링크 버튼 스타일 */
         .link-btn {
             text-decoration: none;
             color: white;
             border: 2px solid white;
-            padding: 10px 20px;
-            font-size: 14px;
+            padding: 12px 24px;
+            font-size: 16px;
             font-weight: bold;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.3);
             transition: all 0.3s ease;
-            white-space: nowrap;
         }
-        .link-btn:hover { background-color: white; color: black; }
 
-        /* [모바일 대응] */
-        @media (max-width: 768px) {
-            .models-wrapper { height: 60vh; }
-            
-            #dumpling-model {
-                width: 100px; 
-                height: 100px;
-                /* 모바일에서도 구석으로 */
-                right: 2%; 
-                bottom: 5%; 
-            }
+        .link-btn:hover {
+            background-color: white;
+            color: black;
         }
     </style>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
@@ -95,30 +58,19 @@
 <body>
 
     <div class="main-container">
-        
-        <div class="models-wrapper">
-            <model-viewer 
-                id="dumpling-model"
-                src="assets/dumpling%20character%203d%20model.glb" 
-                alt="만두" 
-                disable-zoom
-                auto-rotate
-                shadow-intensity="1">
-            </model-viewer>
-
-            <model-viewer 
-                id="robot-model"
-                src="assets/humanoid%20robot%203d%20model.glb" 
-                alt="휴머노이드 로봇" 
-                auto-rotate 
-                camera-controls 
-                shadow-intensity="1">
-            </model-viewer>
-        </div>
+        <model-viewer 
+            src="assets/humanoid%20robot%203d%20model.glb" 
+            alt="휴머노이드 로봇" 
+            auto-rotate 
+            camera-controls 
+            shadow-intensity="1">
+        </model-viewer>
 
         <div class="links-container">
             <a href="https://github.com/gkseofla7" class="link-btn" target="_blank">Github</a>
+            
             <a href="https://www.linkedin.com/in/%EB%8C%80%EB%A6%BC-%ED%95%9C-299aab293/" class="link-btn" target="_blank">LinkedIn</a>
+            
             <a href="#" class="link-btn" target="_blank">Itch</a>
             <a href="#" class="link-btn" target="_blank">Posts</a>
         </div>
