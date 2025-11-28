@@ -43,65 +43,96 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
-        // --- 기본 씬 설정 ---
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color('#0a0a0a');
+        let scene, camera, renderer, controls, clock;
+        let mixer, actions = [], activeAction, defaultAction;
+        let characterGroup, modelContainer, hipsBone;
+        let lastHipsPosition = new THREE.Vector3();
+        let isTransitioning = false;
 
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 1.5, 4);
+        init();
+        animate();
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.shadowMap.enabled = true;
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.2;
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
+        function init() {
+            initScene();
+            setupLights();
+            loadEnvironment();
+            loadCharacter();
+            setupEvents();
+        }
 
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.target.set(0, 1, 0);
+        function initScene() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color('#0a0a0a');
 
-        // --- 조명 설정 ---
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(ambientLight);
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 1.5, 4);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 2);
-        dirLight.position.set(2, 5, 2);
-        dirLight.castShadow = true;
-        scene.add(dirLight);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-        // --- HDR 환경맵 ---
-        new RGBELoader()
-            .load('https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/moonlit_golf_1k.hdr', function (texture) {
-                texture.mapping = THREE.EquirectangularReflectionMapping;
-                scene.environment = texture;
-            });
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.target.set(0, 1, 0);
 
-        // --- 변수 선언 ---
-        const loader = new GLTFLoader();
-        const clock = new THREE.Clock();
-        
-        // 캐릭터 그룹 구조: characterGroup(월드 이동) > modelContainer(피벗 보정) > Model(메쉬)
-        const characterGroup = new THREE.Group();
-        const modelContainer = new THREE.Group();
-        scene.add(characterGroup);
-        characterGroup.add(modelContainer);
+            clock = new THREE.Clock();
 
-        let mixer; 
-        let actions = []; 
-        let activeAction;      // 현재 실행 중인 액션
-        let defaultAction;     // 기본 액션 (걷기)
-        let isTransitioning = false; // 전환 중인지 체크
-        
-        let hipsBone = null; 
-        let lastHipsPosition = new THREE.Vector3(); 
+            characterGroup = new THREE.Group();
+            modelContainer = new THREE.Group();
+            scene.add(characterGroup);
+            characterGroup.add(modelContainer);
+        }
 
-        // --- 모델 및 애니메이션 로드 ---
-        loader.load('assets/ETAnim.glb', function (etGltf) {
-            const model = etGltf.scene;
-            
-            // 그림자 설정 및 뼈 찾기
+        function setupLights() {
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+            dirLight.position.set(2, 5, 2);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+        }
+
+        function loadEnvironment() {
+            new RGBELoader()
+                .load('https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/moonlit_golf_1k.hdr', function (texture) {
+                    texture.mapping = THREE.EquirectangularReflectionMapping;
+                    scene.environment = texture;
+                });
+        }
+
+        function loadCharacter() {
+            const loader = new GLTFLoader();
+
+            loader.load('assets/ETAnim.glb', function (gltf) {
+                const model = gltf.scene;
+                setupModelMesh(model);
+                
+                modelContainer.add(model);
+                mixer = new THREE.AnimationMixer(model);
+                mixer.addEventListener('finished', restoreDefaultAnimation);
+
+                processAnimations(gltf.animations);
+
+                if (actions.length > 0) {
+                    defaultAction = actions[0];
+                    activeAction = defaultAction;
+                    activeAction.play();
+                }
+
+                loader.load('assets/Greeting.glb', function (subGltf) {
+                    processAnimations(subGltf.animations);
+                    configureSubAnimations();
+                    if (hipsBone) lastHipsPosition.copy(hipsBone.position);
+                });
+            }, undefined, (e) => console.error(e));
+        }
+
+        function setupModelMesh(model) {
             model.traverse(function (node) {
                 if (node.isMesh) {
                     node.castShadow = true;
@@ -112,132 +143,87 @@
                     hipsBone = node;
                 }
             });
-            
-            modelContainer.add(model);
-            mixer = new THREE.AnimationMixer(model);
-
-            // ★ 중요: 애니메이션이 끝나면(finished) 호출될 리스너 등록
-            mixer.addEventListener('finished', restoreDefaultAnimation);
-
-            const addAnimations = (gltf) => {
-                if (gltf.animations.length > 0) {
-                    gltf.animations.forEach((clip) => {
-                        const action = mixer.clipAction(clip);
-                        actions.push(action);
-                    });
-                }
-            };
-
-            // 기본 애니메이션 등록
-            addAnimations(etGltf);
-
-            if (actions.length > 0) {
-                defaultAction = actions[0];
-                activeAction = defaultAction;
-                activeAction.play();
-            }
-
-            // 추가 애니메이션(앉기 등) 로드
-            loader.load('assets/Greeting.glb', function (sitGltf) {
-                addAnimations(sitGltf);
-                
-                // ★ 앉기 애니메이션 설정: 한 번만 재생하고 멈춤
-                // (첫 번째인 defaultAction을 제외한 나머지들에 적용)
-                for (let i = 1; i < actions.length; i++) {
-                    const action = actions[i];
-                    action.loop = THREE.LoopOnce; 
-                    action.clampWhenFinished = true; // 마지막 프레임 유지
-                }
-
-                if (hipsBone) lastHipsPosition.copy(hipsBone.position);
-            });
-
-        }, undefined, function (error) {
-            console.error('로드 실패:', error);
-        });
-
-
-        // --- 이벤트 처리 ---
-        window.addEventListener('pointerdown', triggerAction);
-
-        // 클릭 시 특수 액션 실행
-        function triggerAction() {
-            // 조건: 액션이 로드됨, 전환 중 아님, 현재 걷는 중임
-            if (!actions || actions.length <= 1 || isTransitioning || activeAction !== defaultAction) return;
-
-            // 2번째 애니메이션(Sit) 실행
-            const actionToPlay = actions[1]; 
-            executeTransition(defaultAction, actionToPlay);
         }
 
-        // 애니메이션 종료 시 기본으로 복귀
+        function processAnimations(clips) {
+            if (!clips || clips.length === 0) return;
+            clips.forEach((clip) => {
+                const action = mixer.clipAction(clip);
+                actions.push(action);
+            });
+        }
+
+        function configureSubAnimations() {
+            for (let i = 1; i < actions.length; i++) {
+                const action = actions[i];
+                action.loop = THREE.LoopOnce;
+                action.clampWhenFinished = true;
+            }
+        }
+
+        function setupEvents() {
+            window.addEventListener('pointerdown', triggerAction);
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        function triggerAction() {
+            if (!actions || actions.length <= 1 || isTransitioning || activeAction !== defaultAction) return;
+            executeTransition(defaultAction, actions[1]);
+        }
+
         function restoreDefaultAnimation(event) {
-            // 끝난 동작이 걷기가 아니라면 -> 다시 걷기로 복귀
             if (event.action !== defaultAction) {
                 executeTransition(event.action, defaultAction);
             }
         }
 
-        // 공통 전환 함수 (A -> B)
         function executeTransition(prev, next) {
             next.reset();
             next.play();
-            prev.crossFadeTo(next, 1.0, true); // 1초 동안 섞임
+            prev.crossFadeTo(next, 1.0, true);
 
             isTransitioning = true;
             activeAction = next;
             
-            // 1초 뒤에 전환 상태 해제
             setTimeout(() => {
                 isTransitioning = false;
             }, 1000);
         }
 
-        window.addEventListener('resize', onWindowResize, false);
+        function updateRootMotion() {
+            if (!hipsBone) return;
+
+            const currentPos = hipsBone.position.clone();
+            const deltaVec = new THREE.Vector3().subVectors(currentPos, lastHipsPosition);
+            const scaledDelta = deltaVec.multiplyScalar(0.01);
+
+            modelContainer.position.sub(scaledDelta);
+
+            if (!isTransitioning && activeAction === defaultAction) {
+                characterGroup.position.add(scaledDelta);
+            }
+
+            lastHipsPosition.copy(currentPos);
+        }
+
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-
-        // --- 메인 루프 ---
         function animate() {
             requestAnimationFrame(animate);
             const delta = clock.getDelta();
 
             if (mixer) {
                 mixer.update(delta);
-
-                if (hipsBone) {
-                    const currentPos = hipsBone.position.clone();
-                    
-                    // 1. 이번 프레임 뼈 이동량 계산
-                    const deltaVec = new THREE.Vector3().subVectors(currentPos, lastHipsPosition);
-                    
-                    // 2. 스케일 보정 (cm단위 모델인 경우 0.01 곱함)
-                    const scaledDelta = deltaVec.clone().multiplyScalar(0.01);
-
-                    // 3. [시각 보정] 뼈가 튀어 나가는 것 방지 (항상 실행)
-                    // 뼈가 앞으로 간 만큼 컨테이너를 뒤로 당겨서 제자리에 있는 것처럼 보이게 함
-                    modelContainer.position.sub(scaledDelta);
-
-                    // 4. [월드 이동] 실제 캐릭터 이동 (조건부 실행)
-                    // 조건: 전환 중이 아니고(섞이는 중 X) && 현재 걷는 중일 때만(앉아있을 때 이동 X)
-                    if (!isTransitioning && activeAction === defaultAction) {
-                        characterGroup.position.add(scaledDelta);
-                    }
-
-                    // 위치 갱신
-                    lastHipsPosition.copy(currentPos);
-                }
+                updateRootMotion();
             }
 
             controls.update();
             renderer.render(scene, camera);
         }
-
-        animate();
     </script>
 </body>
 </html>
